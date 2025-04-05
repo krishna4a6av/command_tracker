@@ -1,5 +1,6 @@
 import sqlite3
 import re
+import os
 from rich.table import Table
 from rich.console import Group
 from rich.panel import Panel
@@ -7,7 +8,9 @@ from rich.progress import BarColumn, Progress
 from rich.text import Text
 from theme import console
 
-DB_FILE = "commands.db"
+# Get absolute path to database file
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_FILE = os.path.join(BASE_DIR, "commands.db")
 
 def normalize_command(cmd):
     return cmd.strip().split()[0] if cmd.strip() else ""
@@ -17,12 +20,16 @@ def is_valid_command(cmd):
     return bool(re.match(r"^[a-zA-Z0-9._/+!-]+$", base)) and base not in {"-", "..", ":", ":"}
 
 def get_all_commands():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("SELECT command, count FROM commands ORDER BY command ASC")
-    rows = cursor.fetchall()
-    conn.close()
-    return rows
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("SELECT command, count FROM commands ORDER BY command ASC")
+        rows = cursor.fetchall()
+        conn.close()
+        return rows
+    except sqlite3.OperationalError as e:
+        console.print(f"[bold red]Database error:[/] {e}")
+        return []
 
 def display_table(data, title):
     table = Table(title=f"[header]{title}[/]", border_style="border")
@@ -115,7 +122,6 @@ def show_filtered_commands():
     show_graph = input("Show graph? [y/N]: ").strip().lower()
     if show_graph == "y":
         display_bar_graph(grouped[:20], f"Command Usage (Filtered: {query})")
-
 
 def main():
     while True:
