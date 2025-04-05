@@ -1,11 +1,20 @@
-## 🛠 Setup
+# 🛠 Setup
 
 Clone the repo and run the setup script:
 
 ```bash
 git clone https://github.com/krishna4a6av/command_tracker.git
 cd command_tracker
+chmod +x setup.sh
 ./setup.sh
+```
+
+
+To remove:
+```bash
+cd command_tracker
+chmod +x uninstall.sh
+./uninstall.sh
 ```
 
 I made this as a project for fun, mainly to see/have an insight at commandline habbits. This project is entirely made in python, hence easy to modify depending on anyones preferences.

@@ -16,7 +16,7 @@ fi
 
 # Install dependencies
 echo "📦 Installing Python dependencies..."
-pip3 install -r rich
+pip3 install -r requirements.txt
 
 # Create symlink for 'showcmm'
 echo "🔗 Adding 'showcmm' command..."
