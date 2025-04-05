@@ -1,6 +1,10 @@
 import sqlite3
 import re
 from rich.table import Table
+from rich.console import Group
+from rich.panel import Panel
+from rich.progress import BarColumn, Progress
+from rich.text import Text
 from theme import console
 
 DB_FILE = "commands.db"
@@ -10,7 +14,7 @@ def normalize_command(cmd):
 
 def is_valid_command(cmd):
     base = normalize_command(cmd)
-    return bool(re.match(r"^[\w./+!-]+$", base)) and base not in {"-", "..", ":", ":"}
+    return bool(re.match(r"^[a-zA-Z0-9._/+!-]+$", base)) and base not in {"-", "..", ":", ":"}
 
 def get_all_commands():
     conn = sqlite3.connect(DB_FILE)
@@ -28,56 +32,112 @@ def display_table(data, title):
         table.add_row(cmd, str(count))
     console.print(table)
 
+def display_bar_graph(data, title):
+    if not data:
+        console.print("[bold red]No data to display.[/]")
+        return
+
+    max_count = max(count for _, count in data)
+    bars = [
+        f"[cell]{cmd:<15}[/] [header]{'█' * int((count / max_count) * 30)}[/] [cell]{count}[/]"
+        for cmd, count in data
+    ]
+    console.print(Panel("\n".join(bars), title=f"[header]{title}[/]", border_style="border"))
+
+def filter_commands(commands, query):
+    query = query.strip().lower()
+    return [(cmd, count) for cmd, count in commands if query in normalize_command(cmd).lower()]
+
 def show_all_commands():
     commands = get_all_commands()
-    if commands:
-        summary = {}
-        for cmd, count in commands:
-            key = normalize_command(cmd)
-            if is_valid_command(key):
-                summary[key] = summary.get(key, 0) + count
-        grouped = sorted(summary.items(), key=lambda x: x[0])
-        display_table(grouped, "All Commands")
-    else:
+    if not commands:
         console.print("[bold red]No commands found in the database.[/]")
+        return
+
+    summary = {}
+    for cmd, count in commands:
+        key = normalize_command(cmd)
+        if is_valid_command(key):
+            summary[key] = summary.get(key, 0) + count
+    grouped = sorted(summary.items(), key=lambda x: x[0])
+
+    display_table(grouped, "All Commands")
+
+    show_graph = input("Show graph? [y/N]: ").strip().lower()
+    if show_graph == "y":
+        display_bar_graph(grouped[:20], "Command Usage")
 
 def show_top_commands():
     try:
-        console.print("\n[header]How many top commands do you want to see(defaule=10)?[/] [default: 10]")
-        limit = int(input("> ") or 10)
+        limit = int(input("How many top commands do you want to see? [Default: 10]: ") or 10)
     except ValueError:
         limit = 10
 
     commands = get_all_commands()
-    if commands:
-        summary = {}
-        for cmd, count in commands:
+    if not commands:
+        console.print("[bold red]No commands found in the database.[/]")
+        return
+
+    summary = {}
+    for cmd, count in commands:
+        key = normalize_command(cmd)
+        if is_valid_command(key):
+            summary[key] = summary.get(key, 0) + count
+
+    grouped = sorted(summary.items(), key=lambda x: x[1], reverse=True)[:limit]
+    display_table(grouped, f"Top {limit} Commands")
+
+    show_graph = input("Show graph? [y/N]: ").strip().lower()
+    if show_graph == "y":
+        display_bar_graph(grouped, f"Top {limit} Commands Usage")
+
+def show_filtered_commands():
+    query = input("Enter part of the command to filter by: ").strip().lower()
+    if not query:
+        console.print("[bold red]No filter provided.[/]")
+        return
+
+    commands = get_all_commands()
+    summary = {}
+    for cmd, count in commands:
+        if query in cmd.lower():  # Now searching the full command
             key = normalize_command(cmd)
             if is_valid_command(key):
-                summary[key] = summary.get(key, 0) + count
-        grouped = sorted(summary.items(), key=lambda x: x[1], reverse=True)[:limit]
-        display_table(grouped, f"Top {limit} Commands")
-    else:
-        console.print("[bold red]No commands found in the database.[/]")
+                summary[cmd] = summary.get(cmd, 0) + count
+
+    if not summary:
+        console.print("[bold red]No matching commands found.[/]")
+        return
+
+    grouped = sorted(summary.items(), key=lambda x: x[1], reverse=True)
+    display_table(grouped, f"Filtered by '{query}'")
+
+    show_graph = input("Show graph? [y/N]: ").strip().lower()
+    if show_graph == "y":
+        display_bar_graph(grouped[:20], f"Command Usage (Filtered: {query})")
+
 
 def main():
     while True:
         console.print("\n[bold underline]Command Stats Viewer[/]", style="header")
-        console.print("[cell]1.[/] View Top Commands")
-        console.print("[cell]2.[/] View All Commands")
-        console.print("[cell]q.[/] Exit")
+        print("1. View Top Commands")
+        print("2. View All Commands")
+        print("3. Filter Commands")
+        print("q. Exit")
 
-        choice = input("\n[>] ").strip()
+        choice = input("Choose an option: ").strip()
 
         if choice == "1":
             show_top_commands()
         elif choice == "2":
             show_all_commands()
+        elif choice == "3":
+            show_filtered_commands()
         elif choice == "q":
-            console.print("[header]... Going back to main menu![/]")
+            print("Going back to main menu!")
             break
         else:
-            console.print("[error]Invalid choice. Please try again.[/]")
+            print("Invalid choice. Please try again.")
 
 if __name__ == "__main__":
     main()

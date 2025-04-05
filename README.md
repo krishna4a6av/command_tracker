@@ -1,3 +1,13 @@
+## 🛠 Setup
+
+Clone the repo and run the setup script:
+
+```bash
+git clone https://github.com/krishna4a6av/command_tracker.git
+cd command_tracker
+./setup.sh
+```
+
 I made this as a project for fun, mainly to see/have an insight at commandline habbits. This project is entirely made in python, hence easy to modify depending on anyones preferences.
 
 Main feature include
@@ -16,4 +26,4 @@ Future plan
   - Gui? maybe
 
 
-Plase feel free to fork this simple proj and adding your twists :)
+Plase feel free to clone this simple proj and adding your twists :)
