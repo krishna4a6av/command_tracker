@@ -9,6 +9,8 @@ chmod +x setup.sh
 ./setup.sh
 ```
 
+If pip cannot install tabulate or any other dependency on your os you can install them through your package manager.
+
 
 To remove:
 ```bash
