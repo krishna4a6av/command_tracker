@@ -1,9 +1,12 @@
 import subprocess
 import os
 import sqlite3
+from rich.panel import Panel
+from rich.prompt import Prompt
+from rich.layout import Layout
 from theme import console
 
-# Get absolute path to the project directory (where main.py is located)
+# Paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILE = os.path.join(BASE_DIR, "commands.db")
 HISTORY_SCRIPT = os.path.join(BASE_DIR, "history.py")
@@ -24,37 +27,45 @@ def get_command_stats():
         cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) FROM commands")
         total_unique = cursor.fetchone()[0]
-
         cursor.execute("SELECT SUM(count) FROM commands")
         total = cursor.fetchone()[0] or 0
-
         conn.close()
         return total, total_unique
     except sqlite3.Error as e:
-        console.print(f"[error]Error reading from database: {e}[/]")
+        console.print(f"[error]Database error: {e}[/]")
         return (0, 0)
+
+def show_menu():
+    menu_text = "[header bold]Command Tracker Menu[/]\n\n"
+    menu_text += "[header]1.[/] Import Shell History\n"
+    menu_text += "[header]2.[/] View Commands\n"
+    menu_text += "[header]3.[/] Clear Command History\n"
+    menu_text += "[header]q.[/] Exit"
+    return Panel(menu_text, title="[header]Main Menu[/]", border_style="border")
+
+def show_stats_panel():
+    if database_exists():
+        total, unique = get_command_stats()
+        content = f"[cell]Tracked Commands:[/] [header]{total}[/] total ([header]{unique}[/] unique)"
+    else:
+        content = "[error]⚠️  No command history found. Please import shell history."
+    return Panel(content, title="[header]Stats[/]", border_style="border")
 
 def main_menu():
     while True:
         clear_screen()
-        console.print("=== [header]Command Tracker[/] ===\n")
+        layout = Layout()
+        layout.split_column(
+            Layout(show_stats_panel(), size=3),
+            Layout(show_menu(), size=10)
+        )
+        console.print(layout)
 
-        if database_exists():
-            total, unique = get_command_stats()
-            console.print(f"[cell]Tracked Commands:[/] [header]{total}[/] total ([header]{unique}[/] unique)\n")
-        else:
-            console.print("[error]⚠️  No command history found. Please import shell history.[/]\n")
-
-        console.print("[header]1.[/] Import Shell History")
-        console.print("[header]2.[/] View Commands")
-        console.print("[header]3.[/] Clear Command History")
-        console.print("[header]q.[/] Exit")
-
-        choice = input("\nChoose an option: ").strip()
+        choice = Prompt.ask("[prompt]Choose an option[/]", choices=["1", "2", "3", "q"], default="q")
 
         if choice == "1":
             if database_exists():
-                clear_choice = input("Clear existing database before importing? (importing new history files without clearing old will end up in both getting appended) [y/N]: ").strip().lower()
+                clear_choice = Prompt.ask("[prompt]Clear existing database before importing?[/]", choices=["y", "n"], default="n")
                 if clear_choice == "y":
                     subprocess.run(["python3", CLEAR_DB_SCRIPT])
             subprocess.run(["python3", HISTORY_SCRIPT])
@@ -71,7 +82,7 @@ def main_menu():
             if not database_exists():
                 console.print("[error]⚠️  Database does not exist.[/]")
             else:
-                confirm = input("Are you sure you want to delete all command history from the database? [y/N]: ").strip().lower()
+                confirm = Prompt.ask("[prompt]Delete all command history from the database?[/]", choices=["y", "n"], default="n")
                 if confirm == "y":
                     subprocess.run(["python3", CLEAR_DB_SCRIPT])
                     console.print("[header]✅ Database cleared successfully.[/]")
@@ -80,11 +91,8 @@ def main_menu():
             input("\nPress Enter to return to menu...")
 
         elif choice == "q":
-            console.print("[header]Goodbye![/]")
+            console.print("\n[header]Goodbye![/]")
             break
-        else:
-            console.print("[error]Invalid option.[/]")
-            input("Press Enter to try again...")
 
 if __name__ == "__main__":
     main_menu()
