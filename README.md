@@ -19,15 +19,15 @@ chmod +x uninstall.sh
 ./uninstall.sh
 ```
 
-I made this as a project for fun, mainly to see/have an insight at commandline habbits. This project is entirely made in python, hence easy to modify depending on anyones preferences.
+I made this as a project for fun, simply to be able to see most used commands and other command line stats. This project is entirely made in python, hence easy to modify depending on anyones preferences.
 
-Main feature include
+Main feature include:
  - Allowing to see command history in tabular form from all shells(bash/zsh/fish)
  - extensive elaboration on commandline habbits 
  - Allowing one to track most used commands with style (Gruvbox theme)
 
 
-Dependencies you might need (Not needed to done manually, setup.sh will take care of them)
+Dependencies you might need (Not needed to be added manually, setup.sh will take care of them)
   - python, pip, tabulate (pip install tabulate, python-tabulate on aur)
 
 
@@ -37,4 +37,4 @@ Future plan
   - Gui? maybe
 
 
-Plase feel free to clone this simple proj and adding your twists :)
+Plase feel free to clone/fork this simple proj and adding your twists :)
