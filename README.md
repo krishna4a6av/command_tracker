@@ -9,7 +9,7 @@ chmod +x setup.sh
 ./setup.sh
 ```
 
-If pip cannot install tabulate or any other dependency on your os you can install them through your package manager.
+If pip fails to  install tabulate or any other dependency on your os you can install them through your package manager.
 
 
 To remove:
@@ -27,7 +27,7 @@ Main feature include
  - Allowing one to track most used commands with style (Gruvbox theme)
 
 
-Dependencies you might need
+Dependencies you might need (Not needed to done manually, setup.sh will take care of them)
   - python, pip, tabulate (pip install tabulate, python-tabulate on aur)
 
 
