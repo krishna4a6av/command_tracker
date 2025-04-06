@@ -145,16 +145,19 @@ def run_subcommand():
                 subprocess.run(["python3", CLEAR_DB_SCRIPT])
         subprocess.run(["python3", HISTORY_SCRIPT])
 
-    def run_clear():
-        if not database_exists():
-            console.print("[error]⚠️ No database found to clear.[/]")
-            return
-        subprocess.run(["python3", CLEAR_DB_SCRIPT])
+    def run_safe_clear():
+        confirm = input("⚠️  Are you sure you want to clear all saved command history? [y/N]: ").strip().lower()
+        if confirm == "y":
+            subprocess.run(["python3", CLEAR_DB_SCRIPT])
+            console.print("[header]✅ Database cleared successfully.[/]")
+        else:
+            console.print("[cell]Cancelled.[/]")
+
 
     commands = {
         "view": run_view,
         "update": run_update,
-        "clear": run_clear,
+        "clear": run_safe_clear,
     }
 
     if len(sys.argv) > 1:
