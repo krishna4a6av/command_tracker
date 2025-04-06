@@ -1,0 +1,43 @@
+.TH SHOWCMM 1 "April 2025" "Command Tracker" "User Commands"
+.SH NAME
+showcmm \- Shell command usage tracker and viewer
+.SH SYNOPSIS
+.B showcmm
+[\fICOMMAND\fR]
+.SH DESCRIPTION
+.B showcmm
+is a tool to track and visualize your shell command usage over time.
+
+.SH COMMANDS
+.TP
+.B view
+View command usage stats. Use
+.B --top
+to view top commands or
+.B --all
+to view all commands.
+
+.TP
+.B update
+Update the command database by parsing shell history.
+
+.TP
+.B clear
+Clear the command database.
+
+.SH EXAMPLES
+.B showcmm view --top
+.br
+Show top command usage.
+
+.B showcmm update
+.br
+Update the database with new shell history.
+
+.B showcmm clear
+.br
+Clear all tracked command data.
+
+.SH AUTHOR
+Written by Krishna.
+

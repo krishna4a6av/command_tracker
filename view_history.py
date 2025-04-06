@@ -1,6 +1,7 @@
 import sqlite3
 import re
 import os
+import sys
 from rich.table import Table
 from rich.console import Group
 from rich.panel import Panel
@@ -68,7 +69,7 @@ def show_all_commands():
             summary[key] = summary.get(key, 0) + count
     grouped = sorted(summary.items(), key=lambda x: x[0])
 
-    display_table(grouped, "All Commands")
+    display_table(grouped, "\n All Commands")
 
     show_graph = input("Show graph? [y/N]: ").strip().lower()
     if show_graph == "y":
@@ -92,14 +93,16 @@ def show_top_commands():
             summary[key] = summary.get(key, 0) + count
 
     grouped = sorted(summary.items(), key=lambda x: x[1], reverse=True)[:limit]
-    display_table(grouped, f"Top {limit} Commands")
+    display_table(grouped, f"\n Top {limit} Commands")
 
     show_graph = input("Show graph? [y/N]: ").strip().lower()
     if show_graph == "y":
         display_bar_graph(grouped, f"Top {limit} Commands Usage")
 
-def show_filtered_commands():
-    query = input("Enter part of the command to filter by: ").strip().lower()
+
+def show_filtered_commands(query=None):
+    if query is None:
+        query = input("Enter part of the command to filter by: ").strip().lower()
     if not query:
         console.print("[bold red]No filter provided.[/]")
         return
@@ -107,13 +110,13 @@ def show_filtered_commands():
     commands = get_all_commands()
     summary = {}
     for cmd, count in commands:
-        if query in cmd.lower():  # Now searching the full command
+        if query in cmd.lower():
             key = normalize_command(cmd)
             if is_valid_command(key):
                 summary[cmd] = summary.get(cmd, 0) + count
 
     if not summary:
-        console.print("[bold red]No matching commands found.[/]")
+        console.print(f"[bold red]No matching commands found for '{query}'.[/]")
         return
 
     grouped = sorted(summary.items(), key=lambda x: x[1], reverse=True)
@@ -131,7 +134,7 @@ def main():
         print("3. Filter Commands")
         print("q. Exit")
 
-        choice = input("Choose an option: ").strip()
+        choice = input("\nChoose an option [Default: q]: ").strip().lower() or "q"
 
         if choice == "1":
             show_top_commands()
@@ -145,6 +148,23 @@ def main():
         else:
             print("Invalid choice. Please try again.")
 
+def cli_entry():
+    args = sys.argv[1:]
+
+    if "--top" in args:
+        show_top_commands()
+    elif "--all" in args:
+        show_all_commands()
+    elif "--filter" in args:
+        try:
+            idx = args.index("--filter")
+            query = args[idx + 1]
+            show_filtered_commands(query)
+        except (IndexError, ValueError):
+            console.print("[bold red]Please provide a command to filter after '--filter'[/]")
+    else:
+        main()
+
 if __name__ == "__main__":
-    main()
+    cli_entry()
 

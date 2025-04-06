@@ -3,6 +3,7 @@
 import subprocess
 import os
 import sqlite3
+import sys
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.layout import Layout
@@ -89,7 +90,10 @@ def main_menu():
         choice = Prompt.ask("[prompt]Choose an option[/]", choices=["1", "2", "3", "q"], default="q")
 
         if choice == "1":
-            clear_choice = Prompt.ask("[prompt]Clear existing database before importing? (Not doing so will result in both old database and new entries getting appended)[/]", choices=["y", "n"], default="y")
+            clear_choice = Prompt.ask(
+                "[prompt]Clear saved command history before importing?(not doing so will lead to existing and new commands being appended)[/]",
+                choices=["y", "n"], default="y"
+            )
             if clear_choice == "y":
                 subprocess.run(["python3", CLEAR_DB_SCRIPT])
             subprocess.run(["python3", HISTORY_SCRIPT])
@@ -100,7 +104,7 @@ def main_menu():
             input("\nPress Enter to return to menu...")
 
         elif choice == "3":
-            confirm = Prompt.ask("[prompt]Delete all command history?[/]", choices=["y", "n"], default="n")
+            confirm = Prompt.ask("[prompt]Delete all command history(only the showcmm history will be removed)?[/]", choices=["y", "n"], default="n")
             if confirm == "y":
                 subprocess.run(["python3", CLEAR_DB_SCRIPT])
                 console.print("[header]✅ Database cleared successfully.[/]")
@@ -112,8 +116,34 @@ def main_menu():
             console.print("\n[header]Goodbye![/]")
             break
 
+# --- CLI Subcommand Support ---
+def run_subcommand():
+    def run_view():
+        args = sys.argv[2:]  # Skip "showcmm view"
+        cmd = ["python3", VIEW_SCRIPT] + args
+        subprocess.run(cmd)
+
+    commands = {
+        "view": run_view,
+        "update": lambda: subprocess.run(["python3", HISTORY_SCRIPT]),
+        "clear": lambda: subprocess.run(["python3", CLEAR_DB_SCRIPT]),
+    }
+
+    if len(sys.argv) > 1:
+        cmd = sys.argv[1]
+        if cmd in commands:
+            if cmd == "update" and database_exists():
+                confirm = input("Clear existing database first? [y/N]: ").strip().lower()
+                if confirm == "y":
+                    subprocess.run(["python3", CLEAR_DB_SCRIPT])
+            commands[cmd]()
+        else:
+            console.print(f"[error]Unknown command: {cmd}[/]")
+    else:
+        if not database_exists():
+            first_time_menu()
+        main_menu()
+
 if __name__ == "__main__":
-    if not database_exists():
-        first_time_menu()
-    main_menu()
+    run_subcommand()
 
