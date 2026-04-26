@@ -2,14 +2,21 @@ import os
 import re
 import subprocess
 from cmd_database import insert_commands_bulk
+from pathlib import Path
+
 
 def list_available_shells():
     shells = {
-        "bash": os.path.expanduser("~/.bash_history"),
-        "zsh": os.path.expanduser("~/.zsh_history"),
-        "fish": os.path.expanduser("~/.local/share/fish/fish_history")
+        "bash": Path(os.path.expanduser("~/.bash_history")),
+        "zsh": Path(
+            f"{os.environ['ZDOTDIR']}/.zsh_history"
+            if os.environ["ZDOTDIR"]
+            else os.path.expanduser("~/.zsh_history")
+        ),
+        "fish": Path(os.path.expanduser("~/.local/share/fish/fish_history")),
     }
     return {shell: path for shell, path in shells.items() if os.path.exists(path)}
+
 
 def run_shell_command(command):
     try:
@@ -18,6 +25,7 @@ def run_shell_command(command):
     except Exception as e:
         print(f"Error executing command: {e}")
         return None
+
 
 def choose_shells():
     available_shells = list_available_shells()
@@ -30,7 +38,9 @@ def choose_shells():
         print(f"{i}. {shell} ({available_shells[shell]})")
     print("0. All shells")
 
-    choice = input("Choose a shell (number or multiple numbers separated by space): ").strip()
+    choice = input(
+        "Choose a shell (number or multiple numbers separated by space): "
+    ).strip()
     if choice == "0":
         return list(available_shells.values())
 
@@ -45,10 +55,14 @@ def choose_shells():
 
 def is_valid_command(command):
     # Ignore empty lines, dashes, or words like 'and:' that are clearly not commands
-    if not command or command.strip() == "-" or command.strip().lower() in {"and:", "or:", "then:", "fi", "do", "done"}:
+    if (
+        not command
+        or command.strip() == "-"
+        or command.strip().lower() in {"and:", "or:", "then:", "fi", "do", "done"}
+    ):
         return False
     # Filter out anything that doesn’t start with a command-like character
-    return re.match(r'^[a-zA-Z0-9./]', command) is not None
+    return re.match(r"^[a-zA-Z0-9./]", command) is not None
 
 
 def read_history():
@@ -63,7 +77,7 @@ def read_history():
     for file_path in history_files:
         with open(file_path, "r", encoding="utf-8", errors="ignore") as file:
             for line in file:
-                command = re.sub(r'^: \d+:\d+;', '', line.strip())
+                command = re.sub(r"^: \d+:\d+;", "", line.strip())
                 if is_valid_command(command):
                     batch.append(command)
 
@@ -77,6 +91,7 @@ def read_history():
         commands.extend(batch)
 
     return commands
+
 
 if __name__ == "__main__":
     shell_type = run_shell_command("echo $SHELL")
