@@ -1,0 +1,10 @@
+[project]
+name = "command-tracker"
+version = "1.0.0"
+description = "A command line utility that allows user to store shell history in sqlite3 database and allows user to view in tabulare form, giving statistical commands line habbits overview"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "rich>=15.0.0",
+    "tabulate>=0.10.0",
+]
